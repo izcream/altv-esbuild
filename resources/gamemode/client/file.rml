@@ -1,0 +1,14 @@
+<rml>
+  <head>
+    <title>RML UI</title>
+    <style>
+      body {
+        font-family: "arial";
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>THIS IS RML UI</h1>
+  </body>
+</rml>

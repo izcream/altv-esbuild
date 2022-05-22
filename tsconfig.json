@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ESNext"],
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "typeRoots": ["./node_modules/@types", "./node_modules/@altv"],
+    "baseUrl": ".",
+    "paths": {
+      "@gamemode/*": ["./src/gamemode/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@*": ["./src/*"]
+    }
+  },
+  "include": ["./src/**/*.ts"],
+  "exclude": ["./node_modules", "**/*.json", "./dist/*"]
+}
