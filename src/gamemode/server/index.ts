@@ -1,6 +1,6 @@
 import '@abraham/reflection'
 import { emitClient, Player } from 'alt-server'
-import { On, OnClient } from '@future-rp/server'
+import { On, OnClient } from '@core/server'
 
 class ServerClass {
     @On('playerConnect')

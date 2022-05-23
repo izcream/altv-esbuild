@@ -1,4 +1,4 @@
-import { OnServer } from '@future-rp/client'
+import { OnServer } from '@core/client'
 import { inject, singleton } from 'tsyringe'
 import { MyService } from './service'
 

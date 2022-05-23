@@ -7,11 +7,15 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "typeRoots": ["./node_modules/@types", "./node_modules/@altv"],
     "baseUrl": ".",
     "paths": {
+      "@future-rp/core-server": ["./src/core/server"],
+      "@future-rp/core-client": ["./src/core/client"],
+      "@future-rp/core-shared": ["./src/core/shared"],
       "@gamemode/*": ["./src/gamemode/*"],
       "@shared/*": ["./src/shared/*"],
       "@*": ["./src/*"]

@@ -1,11 +1,14 @@
 import { config } from 'dotenv'
-import fg from 'fast-glob'
-import fs from 'fs-extra'
 import { build } from 'esbuild'
 import { Resource } from './interfaces'
+import fg from 'fast-glob'
+import fs from 'fs-extra'
+import pkg from '../package.json'
+
 config()
 const SRC_PATH = process.env.SRC_PATH
 const BUILD_PATH = process.env.BUILD_PATH
+const RETAIL_PATH = process.env.RETAIL_PATH
 
 class ResourceBuilder {
     private resources: Resource[]
@@ -15,19 +18,20 @@ class ResourceBuilder {
     }
     public async build() {
         await this.cleanDist()
-        this.resources.forEach((resource) => {
-            Promise.all([this.buildServer(resource), this.buildClient(resource)])
+        for (const resource of this.resources) {
+            await this.buildServer(resource)
+            await this.buildClient(resource)
             this.createResourceConfig(resource)
             this.copyAssets(resource)
-        })
+        }
+        this.copyRetail()
     }
     private createResourceConfig(resource: Resource) {
         let deps: string
         if (resource.config.deps !== undefined) {
             if (resource.config.deps.length > 0) {
-                deps = '[\n'+resource.config.deps.map(d => `\t${d}`).join(',\n')+'\n]'
-            }
-            else {
+                deps = '[\n' + resource.config.deps.map((d) => `\t${d}`).join(',\n') + '\n]'
+            } else {
                 deps = '[]'
             }
         }
@@ -36,7 +40,7 @@ class ResourceBuilder {
             fs.createFileSync(`${resource.buildPath}/resource.cfg`)
         }
         fs.writeFileSync(`${resource.buildPath}/resource.cfg`, configContent, {
-            encoding: 'utf8',
+            encoding: 'utf8'
         })
     }
     private copyAssets(resource: Resource) {
@@ -45,23 +49,35 @@ class ResourceBuilder {
         }
     }
     private buildServer(resource: Resource) {
+        const external = [
+            'alt-server',
+            'alt-shared',
+            ...Object.keys(pkg.dependencies),
+            ...(resource.config?.external !== undefined ? resource.config.external : [])
+        ]
         return build({
             entryPoints: [`${resource.srcPath}/server/index.ts`],
             outfile: `${resource.buildPath}/server.js`,
             target: 'esnext',
             format: 'esm',
             bundle: true,
-            external: ['alt-server', 'alt-shared']
+            external
         })
     }
     private buildClient(resource: Resource) {
+        const external = [
+            'alt-client',
+            'natives',
+            'alt-shared',
+            ...(resource.config?.external !== undefined ? resource.config.external : [])
+        ]
         return build({
             entryPoints: [`${resource.srcPath}/client/index.ts`],
             outfile: `${resource.buildPath}/client.js`,
-            target: 'esnext',
+            target: 'es6',
             format: 'esm',
             bundle: true,
-            external: ['alt-client', 'natives', 'alt-shared', 'alt-webview']
+            external
         })
     }
     private prepareResource(resourceJsonFile: string): Resource {
@@ -70,13 +86,29 @@ class ResourceBuilder {
             config,
             name: config.name,
             srcPath: `${SRC_PATH}/${config.name}`,
-            buildPath: `${BUILD_PATH}/${config.name}`,
+            buildPath: `${BUILD_PATH}/resources/${config.name}`,
             entryClient: `${SRC_PATH}/${config.name}/client/index.ts`,
             entryServer: `${SRC_PATH}/${config.name}/server/index.ts`
         }
     }
     private cleanDist() {
-        return fs.rm(BUILD_PATH, { recursive: true })
+        if (!fs.existsSync(`${BUILD_PATH}/resources`)) return
+        fs.readdirSync(`${BUILD_PATH}/resources`).forEach((folder) => {
+            if (fs.existsSync(`${BUILD_PATH}/resources/${folder}`)) {
+                fs.rmSync(`${BUILD_PATH}/resources/${folder}`, { recursive: true })
+                console.log(`🗑️  removed: ${BUILD_PATH}/resources/${folder}`)
+            }
+        })
+    }
+    private copyRetail() {
+        fs.copyFileSync(`${RETAIL_PATH}/server.cfg`, `${BUILD_PATH}/server.cfg`)
+        fs.copyFileSync('package.json', `${BUILD_PATH}/package.json`)
+        fs.readdirSync(`${RETAIL_PATH}/resources`).forEach((folder) => {
+            if (!fs.pathExistsSync(`${BUILD_PATH}/resources/${folder}`)) {
+                fs.mkdirSync(`${BUILD_PATH}/resources/${folder}`)
+            }
+        })
+        fs.copy(`${RETAIL_PATH}/resources`, `${BUILD_PATH}/resources/`, { recursive: true })
     }
 }
 export default ResourceBuilder

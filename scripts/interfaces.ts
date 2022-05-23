@@ -9,5 +9,6 @@ export interface Resource {
 
 export interface ResourceConfig {
     name: string
-    deps: string[]
+    deps: string[],
+    external?: string[]
 }
